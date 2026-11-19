@@ -1,6 +1,6 @@
 /**
  * @file 常见的语法或逻辑错误
- * @desc 此文件中的配置项，均为在编码中经常遇到的语法或逻辑出错，如把 == 写成了 = 之类的
+ * @description 此文件中的配置项，均为在编码中经常遇到的语法或逻辑出错，如把 == 写成了 = 之类的
  */
 
 const { isProd } = require("../lib/helper")
@@ -51,6 +51,9 @@ module.exports = {
     // 不允许有重复的函数参数名，如 `function foo (a, b, a)`
     "no-dupe-args": 2,
 
+    // 不允许有重复的 else-if 判断条件，如 `if (foo) {} else if (bar) {} else if (bar)`
+    "no-dupe-else-if": 2,
+
     // 不允许有重复的对象 key，如 `const obj = { foo: 1, foo: 2 }`
     "no-dupe-keys": 2,
 
@@ -80,18 +83,24 @@ module.exports = {
       // functions: 仅检测函数表达式的多余括号
       // all: 全部都检查，此时可以用第二个参数调整细节配置
       "functions",
-      // 以下配置仅为 all 时有效
+      // 是否校验以下场景，仅为 all 时有效
       // {
-      //   // 条件表达式中：`if ((foo = bar))`
+      //   // 条件表达式中：`if ((foo = bar))`，见 no-cond-assign
       //   "conditionalAssign": false,
-      //   // return 后的表达式：`return (foo = bar)`
+      //   // return 后的表达式：`return (foo = bar)`，见 no-return-assign
       //   "returnAssign": false,
-      //   // 是否忽略 JSX，可选值为：none, all, multi-line, single-line
-      //   ignoreJSX: 'all',
-      //   // 多个二元表达式连写的情况：`foo = a || (b && c)`
+      //   // 多个二元表达式连写的情况：`foo = a || (b && c)`，见 no-mixed-operators
       //   "nestedBinaryExpressions": false,
-      //   // 箭头函数的条件表达式：`const foo = bar => (baz ? 1 : 2)`
-      //   enforceForArrowConditionals: false,
+      //   // 是否忽略 JSX，可选值为：none, all, multi-line, single-line
+      //   "ignoreJSX": "none",
+      //   // 箭头函数的条件表达式：`const foo = bar => (baz ? 1 : 2)`，见 no-confusing-arrow
+      //   "enforceForArrowConditionals": false,
+      //   // 使用逗号分隔的多句表达式： `if ((val = foo(), val < 10)) {}`，见 no-cond-assign
+      //   "enforceForSequenceExpressions": false,
+      //   // 构造函数与取属性在一起时： `(new Foo()).bar`
+      //   "enforceForNewInMemberExpressions": false,
+      //   // 函数与调用方法在一起时： `(function () {}).call()`
+      //   "enforceForFunctionPrototypeMethods": false,
       // },
     ],
 
@@ -100,6 +109,9 @@ module.exports = {
 
     // 不允许对函数名重新赋值
     "no-func-assign": 2,
+
+    // 不允许对引入的模块重新赋值
+    "no-import-assign": 2,
 
     // 不允许在无独立作用域的块语句内声明函数和变量
     "no-inner-declarations": [2,
@@ -112,14 +124,32 @@ module.exports = {
     "no-invalid-regexp": 2,
 
     // 不允许普通空格和制表符外的其他非常规空格，如零宽空格、换行符
-    "no-irregular-whitespace": 2,
+    "no-irregular-whitespace": [2,
+      {
+        // 是否忽略字符串中的字符检查
+        "skipStrings": false,
+        // 是否忽略注释中的字符检查
+        "skipComments": false,
+        // 是否忽略正则表达式中的字符检查
+        "skipRegExps": false,
+        // 是否忽略模板字符串的字符检查
+        "skipTemplates": false,
+      },
+    ],
+
+    // 不允许定义过大或过小的数字，会丢失精度。JS 的数字精度范围可以通过 Number.MAX_SAFE_INTEGER, Number.MAX_VALUE 等值确定
+    "no-loss-of-precision": 2,
 
     // 不允许使用有误导性的字符串
     // 一些 Unicode 表情字符是使用两个字符拼接在一起生成的，但是在正则中这些字符会被分别匹配
-    "no-misleading-character-class": 0,
+    "no-misleading-character-class": 2,
 
     // 不允许直接调用 `Math(), JSON()`
     "no-obj-calls": 2,
+
+    // 不允许在 Promise 执行器函数中使用 return 返回某个值，除非 return 后不跟值用于流程控制。因为此执行器是通过 resolve/reject 方法向下传递而不是通过 return
+    // 注意此规则也会禁止给 Promise 中传无 `{}` 的箭头函数，因为它隐含了 return
+    "no-promise-executor-return": 2,
 
     // 不允许直接调用对象实例内建的原型方法，包括 `hasOwnProperty`, `isPrototypeOf`, `propertyIsEnumerable`，因为使用 `Object.create()` 可以给对象一个特别的 prototype
     // 所以建议使用对象的构造函数上的方法，如使用 `{}.hasOwnProperty.call(foo, 'bar') 代替 `foo.hasOwnProperty('bar')`
@@ -128,11 +158,14 @@ module.exports = {
     // 不允许在正则中使用连续多个空格，而要用数量限定，如 `/foo {3}bar/`
     "no-regex-spaces": 2,
 
+    // 在 setter 方法最后不允许有 return
+    "no-setter-return": 2,
+
     // 不允许在数组中有多个连续逗号，如 `['foo',,'bar']`
     "no-sparse-arrays": 2,
 
     // 不允许在字符串里使用模板字符串变量格式，如 `const str = 'foo${bar}'`
-    // 避免本应该使用模板字符串，结果使用了引号，导致模板字符串逻辑未生效
+    // 出现这种情况一般是想使用模板字符串，结果使用了引号，导致模板字符串逻辑未生效
     "no-template-curly-in-string": 2,
 
     // 不允许多行歧义，在不使用分号的情况下容易出现
@@ -141,11 +174,41 @@ module.exports = {
     // 不允许在 return, throw, break, continue 后再有语句
     "no-unreachable": 2,
 
+    // 不允许在循环中通过 return/throw/break 提前退出循环，因为有可能是代码写错了
+    "no-unreachable-loop": [2,
+      {
+        // 忽略哪种循环类型的检测
+        "ignore": [
+          // "WhileStatement",
+          // "DoWhileStatement",
+          // "ForStatement", // # ForStatement 不包含 ForInStatement 和 ForOfStatement
+          "ForInStatement", // # 一个常见合理场景是 for..in 查找 Object 中是否有指定 key
+          // "ForOfStatement",
+        ],
+      },
+    ],
+
     // 不允许在 finally 中使用 return, throw, break, continue 等语句，因为会先于 try 执行
     "no-unsafe-finally": 2,
 
-    // 在 in/instanceof 操作符前使用否定语句时要使用括号，如 `if (!(foo in bar))`
-    "no-unsafe-negation": 2,
+    // 不允许有歧义的否定方式，比如在 in/instanceof 操作符前使用否定语句时要使用括号，`if (!(foo in bar))` ，否则仅会对 `!foo` 取否
+    "no-unsafe-negation": [2,
+      {
+        // 是否校验比较操作符 (`<`, `>`, `<=`, `>=`) 前的否定形式，因为比较操作符的优先级大于 `!` ，语法上是没问题的
+        "enforceForOrderingRelations": true,
+      },
+    ],
+
+    // 不允许不安全的可选值链 (?.) 的使用，如 `obj?.foo()` 中虽然取 `foo` 时用了可选值链，但再继续调用 `foo()` 时仍然可能出错
+    "no-unsafe-optional-chaining": [2,
+      {
+        // 不允许在可选值链上使用算术表达式，因为 `+undefined` 值为 `NaN`、`+null` 值为 `0`，都不会报错
+        "disallowArithmeticOperators": false,
+      },
+    ],
+
+    // 不允许无意义的正则回溯引用，如 `/(a)|\1b/` 中 `\1` 原本希望是对 `(a)` 的回溯引用，但因其在 `|` 后，所以不会引用到任何内容。即原本希望 `/a|(ab)/` 却成了 `/a|b/`
+    "no-useless-backreference": 2,
 
     // 在 await/yield 语句中，不允许即读又写同一变量
     // 如 `foo += await getValue(bar)`，此语句会先读取 `foo` 再异步等待 `getValue` 结果，可能等待过程中 `foo` 会被修改
@@ -153,7 +216,14 @@ module.exports = {
     "require-atomic-updates": 2,
 
     // 使用 `isNaN(foo)` 来判断 `NaN`，而不是 `foo == NaN`
-    "use-isnan": 2,
+    "use-isnan": [2,
+      {
+        // 检查 switch 语句中的情况，如 `switch (NaN)` 或 `case NaN`
+        "enforceForSwitchCase": true,
+        // 检查 indexOf/lastIndexOf 中的情况，如 `indexOf(NaN)`
+        "enforceForIndexOf": true,
+      },
+    ],
 
     // 检查 JSDoc 语法注释，及其正确性，此规则仅在有 JSDoc 注释时检查，如果没有相关注释不会报错
     // 此规则已经不再推荐，请改用 /rules/jsdoc.js 规则

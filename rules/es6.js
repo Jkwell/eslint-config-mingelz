@@ -1,6 +1,6 @@
 /**
  * @file ES5+ 语法
- * @desc 此文件中的配置项，均为 ES6 及更新版本的语法特性检测
+ * @description 此文件中的配置项，均为 ES6 及更新版本的语法特性检测
  */
 
 module.exports = {
@@ -8,7 +8,7 @@ module.exports = {
     "es6": true,
   },
   "parserOptions": {
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2020,
     "sourceType": "module",
   },
 
@@ -17,7 +17,7 @@ module.exports = {
     "arrow-body-style": [2,
       // always: 总使用大括号，这样就失去了隐式 return 的能力
       // as-needed: 大于一句时才需要
-      // never: 箭头后可能要跟很复杂的表达式，所以不建议选这个
+      // never: 不允许有大括号，箭头后可能要跟很复杂的表达式，所以不建议选这个
       "as-needed",
       {
         // 如果返回的是对象，是否要求显式写明 `return`，即需要使用大括号包裹。仅 as-needed 时有效
@@ -53,11 +53,11 @@ module.exports = {
 
     // generator 的 * 号前后是否要有空格
     "generator-star-spacing": [2,
+      // 第二个参数有两种配置方式，第一种是一个字符串：
       // before: 前要有空格
       // after: 后要有空格
       // both: 前后都要有空格
-      // neigher: 前后都不要空格
-      // 可以使用上述某一字符串表示所有情况
+      // neither: 前后都不要空格
       // "before",
       // 或者像下边这样使用对象来描述更详细的情况
       {
@@ -100,11 +100,20 @@ module.exports = {
     // 不允许使用 new 调用 Symbol，因为 Symbol 是被当作函数进行调用的
     "no-new-symbol": 2,
 
+    // 不允许 export 受限制的 module
+    "no-restricted-exports": [0,
+      {
+        // 具体受限制的模块名
+        "restrictedNamedExports": [],
+      },
+    ],
+
     // 不允许 import 受限制的 module
     "no-restricted-imports": [0,
       // 不被允许 import 的 module 都在后边列出
-      // "jquery", "fs",
-      // 也可以提供自定义的提示：
+      // "jquery",
+      // "fs",
+      // 也可以通过一个对象数组提供自定义的提示：
       // [
       //   {
       //     "name": "jquery",
@@ -119,7 +128,12 @@ module.exports = {
     "no-this-before-super": 2,
 
     // 不允许不必要的动态对象值
-    "no-useless-computed-key": 2,
+    "no-useless-computed-key": [2,
+      {
+        // 是否校验 Class 的属性，默认只是查 Object
+        "enforceForClassMembers": true,
+      },
+    ],
 
     // 不允许不必要的 constructor，如果 constructor 什么都没干，就不需要写
     "no-useless-constructor": 2,
@@ -151,7 +165,7 @@ module.exports = {
       {
         // 不允许简写需要加引号的 key，如 `let foo = { 'bar-baz'() {} }`
         "avoidQuotes": true,
-        // 忽略构造函数，这个没太看懂
+        // 忽略对构造函数 `constructor` 方法的检查，即 `constructor` 要写全
         "ignoreConstructors": true,
         // 如果对象方法是箭头函数，则不使用简写形式，如果非箭头函数，则要使用简写形式
         "avoidExplicitReturnArrows": true,
@@ -180,38 +194,46 @@ module.exports = {
       },
     ],
 
-    // 建议使用 数组/对象... 的解构语法
+    // 建议使用对象和数组的解构语法
     "prefer-destructuring": [2,
       // 第一个参数用于分别定义 array 和 object 是否建议，第一个参数有两种定义方式，选其一
       // 1. 直接针对 array/object 进行定义
-      {
-        // 数组的解构，`var [foo, bar] = array`
-        "array": true,
-        // 对象的解构，`var {foo, bar} = object`
-        "object": true,
-      },
-      // 2. 针对更细分的情况进行定义
       // {
-      //   // 当定义变量时是否要解构，如 `var { foo } = bar`
-      //   "VariableDeclarator": {
-      //     "array": true,
-      //     "object": true,
-      //   },
-      //   // 当定义表达式时是否要解构，如 `{ foo } = bar`
-      //   "AssignmentExpression": {
-      //     "array": true,
-      //     "object": true,
-      //   }
+      //   // 数组的解构，如 `var [foo, bar] = array; [foo, bar] = array;`
+      //   "array": true,
+      //   // 对象的解构，如 `var {foo, bar} = object; {foo, bar} = object;`
+      //   "object": true,
       // },
-
-      // 第二个参数目前只有一个属性，见下
+      // 2. 针对更细分的情况进行定义
       {
-        // 重命名对象属性名时，是否要使用解构语法，如：`var {foo: bar} = object` 或 `var bar = object.foo`
+        // 当定义变量时是否要解构
+        "VariableDeclarator": {
+          // `var [foo] = array` 或 `var foo = array[0]`
+          "array": true,
+          // `var {foo} = object` 或 `var foo = object.foo`
+          "object": true,
+        },
+        // 当定义表达式时是否要解构
+        "AssignmentExpression": {
+          // `[foo] = array` 或 `foo = array[0]`
+          "array": false,
+          // `{foo} = object` 或 `foo = object.foo`
+          "object": false,
+        },
+      },
+
+      // 第二个参数目前只有一项配置
+      {
+        // 重命名对象属性名时，是否一定要使用解构语法，如：`var {foo: bar} = object` 或 `var bar = object.foo`
         "enforceForRenamedProperties": false,
       },
     ],
 
     // ES2015 规定了 2、8、16 进制数字的字面量表示方式，所以如果使用 parseInt 转换 2、8、16 进制数字时，给出直接使用数字字面量的提示，不建议再使用 parseInt 进行转换
+    // 如果不是转 2、8、16 进制数字，则可以正常使用 parseInt 方法
+    // * 二进制，使用 `0b`： `0b111110111 === 503`
+    // * 八进制，使用 `0o`： `0o767 === 503`
+    // * 十六进制，使用 `0x`： `0x1F7 === 503`
     "prefer-numeric-literals": 2,
 
     // 使用 Reflect 方案，而不是原来 Object 上的方法
@@ -258,6 +280,8 @@ module.exports = {
       {
         // 忽略大小写
         "ignoreCase": true,
+        // 忽略定义的顺序
+        "ignoreDeclarationSort": true,
         // 忽略解构时每一项的排序
         "ignoreMemberSort": false,
         // 具体的排序规则
@@ -271,6 +295,8 @@ module.exports = {
           // 引用 default 的，如 `import foo from 'bar'`
           "single",
         ],
+        // 允许对 import 项进行分组（通过空行），只要各个分组满足排序即可，不同分组不相互影响
+        "allowSeparatedGroups": false,
       },
     ],
 
@@ -279,14 +305,20 @@ module.exports = {
 
     // 模板字符串表达式与大括号间是否要有空格，`${exp}` 或 `${ exp }`
     "template-curly-spacing": [2,
-      // never: 不要有空格
+      // never: 不要有空格，但可以在 `${}` 中换行，然后换行中再放相应变量
       // always: 要有空格
       "never",
     ],
 
     // yield 的 * 号前后是否要有空格，参考 generator-star-spacing 规则
     "yield-star-spacing": [2,
-      // 分别定义 * 号前后的情况
+      // 第二个参数有两种配置方式，第一种是一个字符串：
+      // after: * 号后有空格，前没有
+      // before: * 号前有空格，后没有
+      // both: * 号前后都有空格
+      // neither: * 号前后都没有空格
+      // "before",
+      // 第二种是一个对象，分别定义 * 号前后的情况
       {
         "before": false,
         "after": true,

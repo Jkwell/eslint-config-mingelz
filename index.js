@@ -19,7 +19,7 @@ module.exports = {
     "./rules/best-practices",
     "./rules/strict-mode",
     "./rules/variables",
-    "./rules/node-commonjs",
+    // "./rules/node-commonjs",
     "./rules/stylistic-issues",
     "./rules/es6",
   ].map(require.resolve),
@@ -42,12 +42,14 @@ module.exports = {
   // },
 
   // 全局变量
-  // 只要 key 存在，就表示全局变量存在，对应的 value 表示此变量是否可被覆写
+  // key 对应全局变量的变量名，值对应此全量变量的检测状态，建议不使用布尔值，因为可读性差
   // "globals": {
-  //   // 值为 true，表示此变量可被覆写
-  //   "foo": true,
-  //   // 值为 false，表示此变量不可被覆写
+  //   // true/"writeable"/"writable": 表示此变量可被覆盖
+  //   "foo": "writable",
+  //   // false/"readable"/"readonly": 表示此变量只读，不可被覆写
   //   "bar": false,
+  //   // "off": 表示此变量不可用于全量变量，一般用于关闭某默认存在的全局变量
+  //   "Promise": "off",
   // },
 
   // 设置源码解析器，及设置解析器的配置项
@@ -55,7 +57,7 @@ module.exports = {
   // "parser": 'espree',
   "parserOptions": {
     // 可以使用 ES 版本号或年份表示，如 3/5/6/7/8/9... 或 2015(6)/2016(7)/2017(8)/2018(9)...，此项受 `env.es6` 配置的影响
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2020,
     // 源码模式，默认为 `script`，如果使用 ES Module，则设置为 `module`
     "sourceType": "module",
     // 针对一些特性支持情况

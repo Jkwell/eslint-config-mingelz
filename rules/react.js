@@ -1,6 +1,6 @@
 /**
  * @file React & JSX 相关配置
- * @desc 此配置依赖 ESLint 插件: eslint-plugin-react@7.11
+ * @description 此配置依赖 ESLint 插件: eslint-plugin-react@7.23
  * @see [eslint-plugin-react]{@link https://github.com/yannickcr/eslint-plugin-react}
  */
 
@@ -15,14 +15,23 @@ module.exports = {
     },
   },
 
+  // 插件通用配置
   "settings": {
-    // 需要传给 eslint-plugin-react 插件的一些参数
     "react": {
       // 指定的编译库，默认是 `React`，如果用的是 preact 的话，则设置为 `h`
       "pragma": "React",
-      // 编译库的版本
-      // "version": "15.0",
+      // 编译库的版本，可以使用版本号，或者使用 'detect' 字符串，由插件自己检测
+      "version": "detect",
     },
+    // 可添加需要限定的属性名
+    // "propWrapperFunctions": [],
+    // 在 react/jsx-no-target-blank 规则中，除了限定 `<a>` ，还要限定哪些组件，主要用于自定义的链接/路由组件
+    // "linkComponents": [
+    //   // 字符串形式，对应的链接属性名也是 `href`
+    //   "Hyperlink",
+    //   // 对象形式，可以自定义链接属性名
+    //   { "name": "Link", "linkAttribute": "to" },
+    // ],
   },
 
   "rules": {
@@ -50,6 +59,10 @@ module.exports = {
       },
     ],
 
+    // 可以通过在 React.Component 上使用箭头函数来避免绑定方法时 this 被改变，
+    // 但这种方式会导致 no-invalid-this 的报错，所以在这里禁用掉了
+    "no-invalid-this": 0,
+
     /**
      * React: General
      */
@@ -64,6 +77,8 @@ module.exports = {
         "rule": "^(is|has)[A-Z]([A-Za-z0-9]?)+",
         // 自定义提示
         "message": "布尔类型（{{ propName }}）需要以 is/has 开头",
+        // 是否同时检查嵌套的 prop
+        "validateNested": true,
       },
     ],
 
@@ -107,23 +122,35 @@ module.exports = {
     "react/forbid-component-props": [2,
       {
         // 禁止使用的属性名
-        "forbid": ["className", "style"],
-        // 同时也可以传对象来指明白名单，如：
-        // "forbid": [
-        //   // 以下表示不允许使用 someProp，但是在 SomeComponent 中可以使用
-        //   {
-        //     "propName": "someProp",
-        //     "allowedFor": ["SomeComponent"],
-        //   },
-        // ],
+        "forbid": [
+          "className",
+          "style",
+          // 同时也可以传对象来设置更详细的信息
+          // {
+          //   // 禁止使用的属性名
+          //   "propName": "style",
+          //   // 可使用此属性的白名单组件
+          //   "allowedFor": ["SomeComponent"],
+          //   // 检测后要展示的信息
+          //   "message": "不允许在自定义组件中使用 style 属性",
+          // },
+        ],
       },
     ],
 
-    // 禁止在 DOM 中使用某些属名，与前一个规则类似，这个是用在普通的 DOM 元素而不是组件上的
+    // 禁止在 DOM 中使用某些属名，与 forbid-component-props 类似，这个是用在普通的 DOM 元素而不是组件上的
     "react/forbid-dom-props": [0,
       {
         // 禁止使用的属性名
-        "forbid": [],
+        "forbid": [
+          // 可以是字符串，表示对应的属性名
+          "id",
+          // 也可以是对象
+          // {
+          //   "propName": "id",
+          //   "message": "Avoid using id",
+          // },
+        ],
       },
     ],
 
@@ -140,6 +167,15 @@ module.exports = {
             "message": "use <strong> instead",
           },
         ],
+      },
+    ],
+
+    // 禁止调用外部组件的 propTypes 属性，除非外部组件明确 export 出了自己的 propTypes
+    // 因为使用 babel-plugin-transform-react-remove-prop-types 插件可以为生产环境代码删除 propTypes 相关定义，从而可能产生隐患
+    "react/forbid-foreign-prop-types": [2,
+      {
+        // 是否可以在 propTypes 组件定义时，引用外部组件的 propTypes
+        "allowInPropTypes": false,
       },
     ],
 
@@ -162,12 +198,17 @@ module.exports = {
       },
     ],
 
-    // 禁止调用外部组件的 propTypes 属性，除非外部组件明确 export 出了自己的 propTypes
-    // 因为使用 babel-plugin-transform-react-remove-prop-types 插件可以为生产环境代码删除 propTypes 相关定义，从而可能产生隐患
-    "react/forbid-foreign-prop-types": [2,
+    // 统一函数组件的定义方式
+    "react/function-component-definition": [2,
+      // 以下配置项，可以选的值包括
+      // function-declaration: 函数定义，如 `function Foo () {}`
+      // function-expression: 函数表达式，如 `const Foo = function () {}`
+      // arrow-function: 箭头函数，如 `const Foo = () => {}`
       {
-        // 是否可以在 propTypes 组件定义时，引用外部组件的 propTypes
-        "allowInPropTypes": false,
+        // 具名组件的定义形式
+        "namedComponents": "arrow-function",
+        // 不具名组件的定义形式
+        "unnamedComponents": "arrow-function",
       },
     ],
 
@@ -175,6 +216,9 @@ module.exports = {
     // 建议使用函数的方式：`this.setState(prevState => ({value: prevState.value + 1}))`
     // 如果希望在 State 更新后做某些事情，可以加第二个参数：`this.setState({value: 2}, () => { doSomething })`
     "react/no-access-state-in-setstate": 2,
+
+    // 创建元素时，行内元素之间需要添加空格
+    "react/no-adjacent-inline-elements": 0,
 
     // 不使用数组的 index 做 key
     // 原因是在 React 中 key 来表明对应的组件是否被改变了，如果 key 不变则 DOM 可被复用
@@ -253,12 +297,28 @@ module.exports = {
     "react/no-this-in-sfc": 2,
 
     // 不允许给组件的 `ref` 属性指定字符串值，它应该是一个回调函数
-    "react/no-string-refs": 2,
+    // 参考： https://zh-hans.reactjs.org/docs/refs-and-the-dom.html#legacy-api-string-refs
+    "react/no-string-refs": [2,
+      {
+        // 是否禁止传入模板字符串
+        "noTemplateLiterals": true,
+      },
+    ],
 
     // 不允许在 JSX 的大括号中（JS 执行部分）使用未转义的实体字符
     // 包括：`>`, `"`, `'`, '}' 几个字符，不包括 `<` 和 `{`，因为如果有实体字符会语法报错
     // 可以通过 HTML 转义，或者使用字符串，如 `<div> &gt; </div>` 或 `<div>{'>'}</div>`
-    "react/no-unescaped-entities": 2,
+    "react/no-unescaped-entities": [2,
+      // {
+      //   // 可以配置覆盖默认的检查字符，同时提供可提供的项
+      //   "forbid": [
+      //     {
+      //       "char": ">",
+      //       "alternatives": ["&gt;"],
+      //     },
+      //   ],
+      // },
+    ],
 
     // 不允许指定未知的属性名，比如 `class`，或者要把连字符形式的属性转为 React 要求的小驼峰形式
     "react/no-unknown-property": [2,
@@ -271,6 +331,15 @@ module.exports = {
     // 不允许使用 `UNSAFE_` 开头的方法
     // `UNSAFE_` 在 React@16.3 中出现，包括 `UNSAFE_componentWillMount`, `UNSAFE_componentWillReceiveProps`, `UNSAFE_componentWillUpdate`
     "react/no-unsafe": 2,
+
+    // 不允许嵌套不稳定的组件，会导致 React 无法应用它的缓存机会，每次渲染都会重新刷新整个组件
+    // 建议通过外层组件传入内部依赖的组件，从而使组件得到重用，不必每次全部渲染
+    "react/no-unstable-nested-components": [0,
+      {
+        // 如果是 `render` 开头的属性，则认为是用于渲染的，允许它的嵌套行为
+        "allowAsProps": true,
+      },
+    ],
 
     // 不允许在 propTypes 中定义未被使用的 props
     "react/no-unused-prop-types": [2,
@@ -299,6 +368,9 @@ module.exports = {
       // never: 不建议使用 ES6 Class，而使用 `createReactClass`
       "always",
     ],
+
+    // 是否限制传入的属性只读
+    "react/prefer-read-only-props": 2,
 
     // 建议使用无状态的组件
     // 当符合以下要求时，会建议使用无状态的组件：
@@ -332,8 +404,10 @@ module.exports = {
     // 此规则和 react/default-props-match-prop-types 互相呼应，可以对照着看
     "react/require-default-props": [2,
       {
-        // 对于 isRequired 的属性，是否允许定义默认值（其实定义了也没用，不过默认值可以为开发提供参照）
+        // 对于 isRequired 的属性，是否禁止定义默认值（其实定义了也没用，不过默认值可以为开发提供参照）
         "forbidDefaultForRequired": false,
+        // 是否忽略检查函数组件
+        "ignoreFunctionalComponents": false,
       },
     ],
 
@@ -365,6 +439,8 @@ module.exports = {
         "order": [
           // 类型注解
           // "type-annotations",
+          // 静态变量
+          // "static-variables",
           // 静态方法
           "static-methods",
           // 生命周期函数
@@ -432,8 +508,32 @@ module.exports = {
       },
     ],
 
+    // 定义 state 放在哪里，是 Class 的静态属性，还是放在 constructor 中
+    "react/state-in-constructor": [2,
+      // always: 放在 constructor 里
+      // never: 放在 Class 的静态属性里
+      "always",
+    ],
+
+    // 检查静态属性（childContextTypes, contextTypes, contextType, defaultProps, displayName, propTypes）的书写方式
+    "react/static-property-placement": [2,
+      // static public field: 使用静态属性方式，要写成 `static childContextTypes = { /*...*/ }`
+      // static getter: 使用静态 getter 方式，要写成 `static get childContextTypes() { /*...*/ }`
+      // property assignment: 使用属性覆写方式，要写成 `MyComponent.childContextTypes = { /*...*/ }`
+      "static public field",
+      // 同时允许第三个参数，用于额外指定某个属性用哪种方式：
+      // {
+      //   "displayName": "static getter",
+      // },
+    ],
+
     // 检测 style 属性应该是一个对象，主要是防止不小心写错
-    "react/style-prop-object": 2,
+    "react/style-prop-object": [2,
+      {
+        // 例外，以下定义的组件允许 style 传非对象参数
+        // "allow": ["MyComponent"],
+      },
+    ],
 
     // 避免给自闭合标签再加子元素，如 `<br>foo</br>`
     "react/void-dom-elements-no-children": 2,
@@ -480,6 +580,22 @@ module.exports = {
     // 该规则没有配置项，只会检查有子元素的多行标签的结束标签位置，要求结束标签必须和开始标签对齐
     "react/jsx-closing-tag-location": 2,
 
+    // 定义 JSX 中的大括号内部，与内容之间是否要加换行
+    "react/jsx-curly-newline": [2,
+      // 第1种配置方式：使用字符串定义所有情况
+      // consistent: 要么前后都有换行，要么前后都没换行
+      // never: 不能有换行
+      // "consistent",
+      // 第2种配置方式：分别针对单行或多行定义，可以使用：
+      // consistent: 要么前后都有换行，要么前后都没换行
+      // forbid: 不能有换行
+      // require: 要有换行
+      {
+        "multiline": "consistent",
+        "singleline": "forbid",
+      },
+    ],
+
     // 定义 JSX 大括号中是否要有空格
     // 这个规则定义较复杂，且有多种定义方式，如需了解更多请参阅文档：https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/jsx-curly-spacing.md
     "react/jsx-curly-spacing": [2,
@@ -505,11 +621,15 @@ module.exports = {
       "never",
     ],
 
-    // 检查 JSX 文件的扩展名
+    // 检查 JSX 文件的扩展名，使用了 JSX 语法的文件应该使用 .jsx 后缀
     "react/jsx-filename-extension": [2,
       {
+        // 检查何时可以使用 .jsx 后缀
+        // always: 只要 JSX 语法文件使用了 .jsx 后缀即可
+        // as-needed: 在 always 的基础上，同时检查 .jsx 后缀的文件必须使用了 JSX 语法，否则应该使用 .js 后缀
+        "allow": "as-needed",
         // 允许的扩展名列表
-        "extensions": [".js", ".jsx"],
+        "extensions": [".jsx"],
       },
     ],
 
@@ -524,13 +644,18 @@ module.exports = {
 
     // 规范 JSX 中所有事件句柄的名字
     "react/jsx-handler-names": [0,
-      // 以下两项规则合起来，最终成这样：`<Foo onChange={this.handleChange}`
+      // 以下两项规则合起来，最终成这样：`<Foo onChange={this.handleChange} />`
+      // 可以通过 false 来关闭某一项检测
       {
         // 事件句柄名称前缀
         // 这里只规划自己的方法名，不对 props 中传来的方法名做要求
         "eventHandlerPrefix": "handle",
         // 事件属性名称前缀
         "eventHandlerPropPrefix": "on",
+        // 是否本地变量作为句柄的情况，如 `<Foo onChange={handleChange} />`
+        "checkLocalVariables": true,
+        // 是否检查写的行内方法，如 `<Foo onChange={() => this.handleChange()} />`
+        "checkInlineFunction": true,
       },
     ],
 
@@ -539,18 +664,35 @@ module.exports = {
       // tab: 使用 Tab 缩进
       // N: 使用 N 个空格缩进
       2,
+      {
+        // 是否检查属性的对齐
+        "checkAttributes": true,
+        // 是否检查逻辑表达式中的 JSX 缩进
+        "indentLogicalExpressions": true,
+      },
     ],
 
     // 在 JSX 中标签属性的缩进
     "react/jsx-indent-props": [2,
-      // tab: 使用 Tab 缩进
-      // N: 使用 N 个空格缩进
-      // first: 与第一个属性的位置对齐（常用于第一个属性与标签同行的情况）
-      2,
+      {
+        // tab: 使用 Tab 缩进
+        // N: 使用 N 个空格缩进
+        // first: 与第一个属性的位置对齐（常用于第一个属性与标签同行的情况）
+        "indentMode": 2,
+        // 忽略三元操作符产生的缩进
+        "ignoreTernaryOperator": false,
+      },
     ],
 
     // 检查数组中的元素是否有 `key` 属性
-    "react/jsx-key": 2,
+    "react/jsx-key": [2,
+      {
+        // 是否检查数组或迭代中的 `<></>` 元素
+        "checkFragmentShorthand": true,
+        // 检查 `key` 要在属性展开之前，如 `<span {...spread} key={"key-after-spread"} />` 即 `key` 在 `...spread` 之后
+        "checkKeyMustBeforeSpread": true,
+      },
+    ],
 
     // 最多可以嵌套几层的 JSX
     "react/jsx-max-depth": [0,
@@ -568,6 +710,14 @@ module.exports = {
         "when": "multiline",
         // 最多多少个属性
         "maximum": 1,
+      },
+    ],
+
+    //  JSX 标签与表达式逻辑，中间是否要插入空行，主要是为了明确区分出模板与逻辑
+    "react/jsx-newline": [2,
+      {
+        // 阻止空行
+        "prevent": false,
       },
     ],
 
@@ -591,8 +741,11 @@ module.exports = {
 
     // 检查 `//` 和 `/*` 不允许出现在 JSX 的文本中，否则会让人不知道这是个注释，还是希望输出的字符串
     // 如果需要使用它，一定要使用 JS 字符串形式
-    // 此规则可以和 react/jsx-no-literals, react/jsx-no-comment-textnodes 相互参考
+    // 此规则可以和 react/jsx-no-literals, react/jsx-curly-brace-presence 相互参考
     "react/jsx-no-comment-textnodes": 2,
+
+    // 不允许给 `Context.Provider` 传自己构造的对象，而应该用 `useMemo()` 或 `useCallback()` 生成
+    "jsx-no-constructed-context-values": 2,
 
     // 不允许有重复的 prop
     "react/jsx-no-duplicate-props": [2,
@@ -603,22 +756,44 @@ module.exports = {
     ],
 
     // 不允许在 JSX 中使用字符字面量
-    // 此规则可以和 react/jsx-no-comment-textnodes, react/jsx-no-comment-textnodes 相互参考
+    // 此规则可以和 react/jsx-no-comment-textnodes, react/jsx-curly-brace-presence 相互参考
     "react/jsx-no-literals": [0,
       {
-        // 不允许使用纯字符串作为子元素，无论是字面量，还是包裹在 JS 字符串中
+        // 不允许使用纯字符串作为子元素，无论是字面量，还是包裹在 JS 字符串中，如 `<div>{'foo'}</div>`
         "noStrings": false,
+        // 不允许在属性中使用字符字面量，如 `<div foo={'bar'}></div>`
+        "noAttributeStrings": false,
+        // 例外，哪些字符串字面量允许使用
+        "allowedStrings": ["allowed"],
+        // 是否忽略属性中的值
+        "ignoreProps": false,
       },
+    ],
+
+    // 不允许链接跳转地址使用 `javascript:` 形式
+    "react/jsx-no-script-url": [2,
+      // 列表中是额外要检查的元素及对应的属性
+      [
+        // 对应 `<Link to="javascript:" />`
+        // {
+        //   "name": "Link",
+        //   "props": ["to"],
+        // },
+      ],
     ],
 
     // 不允许跳转到绝对路径的 `<a>` 标签使用 `target="_blank"`，即 `href` 值跳相对路径不会检查
     // 如确实需要使用，请添加 `rel="noopener noreferrer"`，否则会有安全隐患，可参考 https://mathiasbynens.github.io/rel-noopener
     "react/jsx-no-target-blank": [2,
       {
+        // 是否可以不加 `noreferrer`
+        "allowReferrer": false,
         // 如果 href 属性是变量，是否做检查
         // always: 检查，不允许变量形式的链接添加 `target="_blank"`
         // never: 不检查变量属性
         "enforceDynamicLinks": "always",
+        // 是否检查通过对象展开传入的属性，如 `<a {...unsafeProps} target="_self"></a>`
+        "warnOnSpreadAttributes": false,
       },
     ],
 
@@ -629,6 +804,9 @@ module.exports = {
         "allowGlobals": false,
       },
     ],
+
+    // 避免无意义的多层 fragment 嵌套
+    "react/jsx-no-useless-fragment": 2,
 
     // 一行只能有一条表达式，包括 JSX 标签
     "react/jsx-one-expression-per-line": [0,
@@ -642,7 +820,7 @@ module.exports = {
     ],
 
     // 校验某些可能并不需要的大括号的情况，如 `<div>{'Foo'}</div>`
-    // 此规则可以和 react/jsx-no-comment-textnodes, react/jsx-no-comment-textnodes 相互参考
+    // 此规则可以和 react/jsx-no-comment-textnodes, react/jsx-no-literals 相互参考
     "react/jsx-curly-brace-presence": [2,
       // always: 哪怕是简单字符串，也需要有大括号包裹
       // never: 如果是简单字符串，则不能有大括号包裹
@@ -658,18 +836,43 @@ module.exports = {
       // },
     ],
 
+    // 在定义一段 fragment 时，使用 `<React.Fragment>` 还是 `<>`
+    "react/jsx-fragments": [2,
+      // syntax: 使用 `<><Foo /></>` 方式
+      // element: 使用 `<React.Fragment><Foo /></React.Fragment>` 方式
+      "syntax",
+    ],
+
     // 使用 Pascal（大驼峰）方案来定义组件名
     "react/jsx-pascal-case": [2,
       {
         // 是否允许所有字母全大写
         "allowAllCaps": true,
+        // 是否允许通过父组件引用子组件，常见的例子如 antd 的 `<Form.Item>`
+        "allowNamespace": true,
         // 哪些名称忽略此检测
         "ignore": [],
       },
     ],
 
     // 不允许在 JSX 标签的属性之间包含多个空格，如 `<foo  bar   baz />`
-    "jsx-props-no-multi-spaces": 2,
+    "react/jsx-props-no-multi-spaces": 2,
+
+    // 是否允许在 JSX 标签上定义对象展开操作，如 `<Foo {...props} />`
+    // 使用对象展开符，会传入无法预期的属性，但高阶函数却常依赖这个方案
+    "react/jsx-props-no-spreading": [1,
+      {
+        // 分别指定 HTML 标签和自定义标签的行为
+        // ignore：忽略检测，可以使用对象展开符
+        // enforce：限制不允许使用对象展开符，要啥传啥
+        "html": "enforce",
+        "custom": "enforce",
+        // 是否可以全量展开已明确的对象，如 `<img {...{ prop1, prop2, prop3 }} />`
+        "explicitSpread": "enforce",
+        // 例外，写对应的标签名
+        // "exceptions": [],
+      },
+    ],
 
     // 默认属性是否要排序
     // 包括 getDefaultProps(), defaultProps, propTypes 等相关方法、属性中的定义
@@ -686,13 +889,13 @@ module.exports = {
         // 值为函数的属性放在最后，权重高于 shorthandLast
         "callbacksLast": true,
         // 只有属性名无属性值的属性放在最前，所有此类属性之间按照下边的配置来决定是否还要按照字母排序
-        "shorthandFirst": true,
+        "shorthandFirst": false,
         // 只有属性名无属性值的属性放在最后，权重低于 callbacksLast
         "shorthandLast": false,
         // 忽略大小写
         "ignoreCase": true,
-        // 是否按照字母排序
-        "noSortAlphabetically": false,
+        // 不需要按照字母排序
+        "noSortAlphabetically": true,
         // React 自带的属性是否要放在最前，如 `key`, `ref` 等
         "reservedFirst": true,
       },

@@ -5,21 +5,18 @@ Desktop.ini
 
 # IDE
 .idea
-.vscode
 .project
-*.swp
-*.swo
+.vscode
+*.sw?
 
-# Dependency, Cache, Temporary
+# Build, Deployment, CVS
 node_modules
-bower_components
+package-lock.json
+yarn.lock
 .svn
-.sass-cache
-.nodejs-cache
-npm-debug.log
 
-# Distribution
+# Distribution, Cache, Temporary
 coverage
 dist
-docs
-*.iml
+*.log
+TODOs.md

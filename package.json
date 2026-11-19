@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-mingelz",
-  "version": "3.0.0",
+  "version": "5.1.0",
   "description": "A shared ESLint configuration with Chinese comments. 一份带有完整中文注释的 ESLint 规则。",
   "keywords": [
     "eslint",
@@ -37,13 +37,42 @@
   "scripts": {
     "lint": "NODE_ENV=production eslint --fix --report-unused-disable-directives index.js lib/ rules/"
   },
-  "devDependencies": {
-    "eslint": "^5.9.0"
+  "dependencies": {
+    "confusing-browser-globals": "^1.0.0",
+    "semver": "^7.3.0"
   },
   "peerDependencies": {
-    "eslint": "^5.9.0"
+    "eslint": "^7.24.0",
+    "eslint-plugin-import": "^2.23.0",
+    "eslint-plugin-jsdoc": "^32.2.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-react": "^7.23.0",
+    "eslint-plugin-vue": "^7.9.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint-plugin-import": {
+      "optional": true
+    },
+    "eslint-plugin-jsdoc": {
+      "optional": true
+    },
+    "eslint-plugin-node": {
+      "optional": true
+    },
+    "eslint-plugin-react": {
+      "optional": true
+    },
+    "eslint-plugin-vue": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "eslint": "^7.24.0",
+    "eslint-plugin-import": "^2.23.0",
+    "eslint-plugin-jsdoc": "^32.2.0",
+    "eslint-plugin-node": "^11.1.0"
   },
   "engines": {
-    "node": ">=6.14.0"
+    "node": ">=10.12.0"
   }
 }
